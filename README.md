@@ -1,5 +1,4 @@
-# Indian Flag Image Validator
-<img src="./backend//uploads//1755256558461.jpg" alt="Indian Flag" width="120"/>
+# Indian Flag Image Validator <img src="./backend//uploads//1755256558461.jpg" alt="Indian Flag" width="120"/>
 
 ## 📝 Project Description
 
