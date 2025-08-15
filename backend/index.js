@@ -9,17 +9,21 @@ const flagRoutes = require("./routes/flagRoutes");
 
 const app = express();
 
-// Allowed origins (local + production frontend)
+// Allowed origins (local + production frontend + all Vercel preview URLs)
 const allowedOrigins = [
-  "http://localhost:5173", // Vite dev server
-  "https://your-vercel-app-name.vercel.app", // replace with your actual Vercel frontend URL
+  "http://localhost:5173",
+  "https://indian-flag-validator-frontend.vercel.app", // Replace with your actual Vercel frontend URL if different
 ];
 
 // CORS config
 app.use(
   cors({
     origin: function (origin, callback) {
-      if (!origin || allowedOrigins.includes(origin)) {
+      if (
+        !origin ||
+        allowedOrigins.includes(origin) ||
+        /^https:\/\/indian-flag-validator-frontend.*\.vercel\.app$/.test(origin)
+      ) {
         callback(null, true);
       } else {
         callback(new Error("Not allowed by CORS"));
