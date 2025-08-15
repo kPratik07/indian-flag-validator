@@ -1,0 +1,86 @@
+/* Center everything */
+body {
+  font-family: Arial, sans-serif;
+  background: #f9fafc;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  padding: 40px;
+}
+
+/* Upload Box */
+/* Upload Box */
+.upload-box {
+  border: 2px dashed #b0b0b0;
+  border-radius: 12px;
+  padding: 30px;
+  width: 350px;
+  text-align: center;
+  box-shadow: 0 4px 10px rgba(0, 0, 0, 0.05);
+  transition: 0.3s;
+  margin: 0 auto; /* Center horizontally */
+  position: relative;
+  left: 10px; /* Nudge slightly to the right */
+
+  /* White base + faint tricolor overlay */
+  background: linear-gradient(
+      180deg,
+      rgba(255, 153, 51, 0.15) 0%,
+      /* saffron */ rgba(255, 255, 255, 0.15) 50%,
+      /* white */ rgba(19, 136, 8, 0.15) 100% /* green */
+    ),
+    white; /* base */
+}
+
+.upload-box:hover {
+  border-color: #6c63ff;
+  box-shadow: 0 6px 15px rgba(0, 0, 0, 0.1);
+}
+
+/* Upload Icon */
+.upload-icon {
+  width: 80px; /* smaller width */
+  height: 80px; /* smaller height */
+  fill: #170f9e; /* different arrow color */
+  margin-bottom: 10px;
+}
+
+/* Choose File Button */
+.choose-btn {
+  background: #6c63ff;
+  color: white;
+  border: none;
+  padding: 10px 18px;
+  border-radius: 6px;
+  cursor: pointer;
+  transition: background 0.3s;
+}
+
+.choose-btn:hover {
+  background: #574bff;
+}
+
+/* Validation Report */
+.report-card {
+  margin-top: 30px;
+  padding: 20px;
+  width: 600px;
+  background: white;
+  border-radius: 10px;
+  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.08);
+}
+
+.report-card h2 {
+  border-bottom: 2px solid #eee;
+  padding-bottom: 8px;
+  margin-bottom: 15px;
+}
+
+.report-card ul {
+  margin: 0;
+  padding-left: 20px;
+}
+
+.report-card li {
+  margin-bottom: 6px;
+}
