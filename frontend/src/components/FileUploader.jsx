@@ -56,8 +56,10 @@ const FileUploader = ({ onFileUpload, loading, report }) => {
           className="upload-arrow"
           xmlns="http://www.w3.org/2000/svg"
           viewBox="0 0 24 24"
-          stroke="currentColor"
+          stroke="#0ea5e9" // Tailwind sky-500 shade
           strokeWidth={2}
+          width="80"
+          height="80"
         >
           <path
             strokeLinecap="round"
