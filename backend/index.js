@@ -9,10 +9,10 @@ const flagRoutes = require("./routes/flagRoutes");
 
 const app = express();
 
-// Allowed origins (local + production frontend + all Vercel preview URLs)
+// Allowed origins (local + all Vercel deployments for this project)
 const allowedOrigins = [
   "http://localhost:5173",
-  "https://indian-flag-validator-frontend.vercel.app", // Replace with your actual Vercel frontend URL if different
+  /^https:\/\/indian-flag-validator.*\.vercel\.app$/, 
 ];
 
 // CORS config
@@ -21,12 +21,13 @@ app.use(
     origin: function (origin, callback) {
       if (
         !origin ||
-        allowedOrigins.includes(origin) ||
-        /^https:\/\/indian-flag-validator-frontend.*\.vercel\.app$/.test(origin)
+        allowedOrigins.some((o) =>
+          o instanceof RegExp ? o.test(origin) : o === origin
+        )
       ) {
         callback(null, true);
       } else {
-        callback(new Error("Not allowed by CORS"));
+        callback(new Error("Not allowed by CORS: " + origin));
       }
     },
   })
@@ -40,5 +41,5 @@ app.use("/api", flagRoutes);
 
 const PORT = process.env.PORT || 5000;
 app.listen(PORT, () => {
-  console.log(`Server running on port ${PORT}`);
+  console.log(`✅ Server running on port ${PORT}`);
 });
