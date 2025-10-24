@@ -1,0 +1,16 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<svg width="512" height="512" viewBox="0 0 512 512" fill="none" xmlns="http://www.w3.org/2000/svg">
+  <!-- Saffron Stripe -->
+  <rect x="128" y="128" width="256" height="64" fill="#FF9933"/>
+  <!-- White Stripe with Checkmark -->
+  <rect x="128" y="192" width="256" height="64" fill="white"/>
+  <!-- Green Stripe -->
+  <rect x="128" y="256" width="256" height="64" fill="#138808"/>
+  <!-- Ashoka Chakra -->
+  <circle cx="256" cy="256" r="30" fill="#000080"/>
+  <circle cx="256" cy="256" r="26" fill="white"/>
+  <circle cx="256" cy="256" r="22" fill="#000080"/>
+  <!-- Checkmark -->
+  <path d="M360 320L400 280L440 320" stroke="#10B981" stroke-width="24" stroke-linecap="round" stroke-linejoin="round"/>
+  <path d="M360 320L400 360L440 320" stroke="#10B981" stroke-width="24" stroke-linecap="round" stroke-linejoin="round"/>
+</svg>
