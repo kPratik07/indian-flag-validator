@@ -1,5 +1,5 @@
 import React from "react";
-import "./ValidationReport.css"; // External CSS
+import "./ValidationReport.css";
 
 const ValidationReport = ({ report }) => {
   if (!report) return null;

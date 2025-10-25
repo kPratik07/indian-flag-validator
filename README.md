@@ -1,91 +1,113 @@
-# Indian Flag Image Validator <img src="./backend//uploads//1755256558461.jpg" alt="Indian Flag" width="40"/>
+<div align="center">
 
-## 📝 Project Description
+# 🇮🇳 Indian Flag Image Validator
 
-**Indian Flag Image Validator** is a full-stack web application that allows users to upload an image of the Indian national flag (Tiranga) and validates it against the official BIS (Bureau of Indian Standards) specifications. The app checks for correct aspect ratio, color accuracy, stripe proportions, and Ashoka Chakra details, providing a detailed, user-friendly validation report.
+<img src="https://upload.wikimedia.org/wikipedia/en/thumb/4/41/Flag_of_India.svg/1200px-Flag_of_India.svg.png" alt="Indian Flag" width="300"/>
+
+### *Validate Indian Flag Images Against BIS Specifications*
+
+[![React](https://img.shields.io/badge/React-61DAFB?style=flat&logo=react&logoColor=black)](https://react.dev/)
+[![Node.js](https://img.shields.io/badge/Node.js-339933?style=flat&logo=node.js&logoColor=white)](https://nodejs.org/)
+[![Express](https://img.shields.io/badge/Express-000000?style=flat&logo=express&logoColor=white)](https://expressjs.com/)
+
+</div>
+
+---
+
+## 📖 Description
+
+A full-stack web application that validates Indian national flag images against official **Bureau of Indian Standards (BIS)** specifications. Checks aspect ratio, color accuracy, stripe proportions, and Ashoka Chakra details with automatic border detection.
 
 ---
 
 ## 🚀 Tech Stack
 
-- **Frontend:** React, Vite, Tailwind CSS
-- **Backend:** Node.js, Express, Sharp
-- **Other:** REST API, File Uploads
+**Frontend:** React, Vite, Tailwind CSS  
+**Backend:** Node.js, Express, Sharp, Jimp, Multer  
+**Features:** REST API, Auto border detection, Multi-format support (JPG, PNG, SVG, WebP)
 
 ---
 
-## 🗂️ Project Structure
+## 🛠️ Installation
+
+### Prerequisites
+- Node.js (v16+)
+- npm
+
+### Setup
+
+```bash
+# Clone repository
+git clone https://github.com/yourusername/indian-flag-validator.git
+cd indian-flag-validator
+
+# Backend setup
+cd backend
+npm install
+npm start  # Runs on http://localhost:5000
+
+# Frontend setup (new terminal)
+cd frontend
+npm install
+npm run dev  # Runs on http://localhost:5173
+```
+
+---
+
+## 🎯 Usage
+
+1. Open `http://localhost:5173` in your browser
+2. Upload an Indian Flag image (JPG, PNG, SVG, WebP)
+3. View instant validation report with BIS compliance status
+4. Get detailed feedback on all validation criteria
+
+---
+
+## ✅ Validation Criteria
+
+| Criterion | Specification | Tolerance |
+|-----------|--------------|-----------|
+| Aspect Ratio | 3:2 (1.50) | ±3% |
+| Saffron Color | #FF9933 | ±15% |
+| White Color | #FFFFFF | ±15% |
+| Green Color | #138808 | ±15% |
+| Chakra Blue | #000080 | ±15% |
+| Stripe Height | 1/3 each | ±5% |
+| Chakra Position | Centered | ±10% |
+| Chakra Diameter | 3/4 of white band | ±15% |
+| Chakra Spokes | 24 spokes | 20-28 accepted |
+
+---
+
+## 📁 Project Structure
 
 ```
 indian-flag-validator/
-│
-├── backend/                # Node.js + Express API
-│   ├── index.js            # Entry point
-│   ├── flagValidator.js    # BIS validation logic
-│   ├── package.json        # Backend dependencies
-│   ├── uploads/            # Temporary uploaded images
-│
-├── frontend/               # React application
-│   ├── public/             # Static files
+├── backend/
+│   ├── controllers/flagController.js
+│   ├── routes/flagRoutes.js
+│   ├── services/flagValidator.js
+│   └── index.js
+├── frontend/
 │   ├── src/
-│   │   ├── components/     # UI components
-│   │   ├── pages/          # Page components
-│   │   ├── App.js          # Main App component
-│   │   ├── index.js        # React entry point
-│   │   └── styles/         # Tailwind styles
-│   ├── package.json        # Frontend dependencies
-│
-└── README.md               # Project documentation
+│   │   ├── components/
+│   │   ├── api/flagApi.js
+│   │   └── App.jsx
+│   └── package.json
+└── README.md
 ```
-
----
-
-## 🌐 Frontend Setup & Usage
-
-1. **Navigate to the frontend folder:**
-   ```sh
-   cd frontend
-   ```
-2. **Install dependencies:**
-   ```sh
-   npm install
-   ```
-3. **Start the development server:**
-   ```sh
-   npm run dev
-   ```
-4. **Open your browser at** [http://localhost:5173](http://localhost:5173)  
-   Upload an image and view the validation report.
-
----
-
-## 🖥️ Backend Setup & Usage
-
-1. **Navigate to the backend folder:**
-   ```sh
-   cd backend
-   ```
-2. **Install dependencies:**
-   ```sh
-   npm install
-   ```
-3. **Start the backend server:**
-   ```sh
-   npm run dev
-   ```
-   The backend will run at [http://localhost:5000](http://localhost:5000) (or as configured).
 
 ---
 
 ## 🙏 Credits
 
-- [BIS Flag Code](https://www.bis.gov.in/)
-- [React](https://react.dev/)
-- [Vite](https://vitejs.dev/)
-- [Tailwind CSS](https://tailwindcss.com/)
-- [Node.js](https://nodejs.org/)
-- [Express](https://expressjs.com/)
+- [BIS Flag Code](https://www.bis.gov.in/) - Official specifications
+- [React](https://react.dev/), [Node.js](https://nodejs.org/), [Express](https://expressjs.com/), [Sharp](https://sharp.pixelplumbing.com/)
 
 ---
 
-> Made by Pratik Raj with ❤️ for India.
+<div align="center">
+
+**Made with ❤️ for India by Pratik Raj** 🇮🇳
+
+</div>

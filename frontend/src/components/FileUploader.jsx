@@ -1,7 +1,7 @@
 import React, { useRef, useState } from "react";
-import "./FileUploader.css"; // External CSS
+import "./FileUploader.css";
 
-const FileUploader = ({ onFileUpload, loading, report }) => {
+const FileUploader = ({ onFileUpload, loading, report, onRejection }) => {
   const [dragActive, setDragActive] = useState(false);
   const [file, setFile] = useState(null);
   const inputRef = useRef(null);
@@ -20,21 +20,63 @@ const FileUploader = ({ onFileUpload, loading, report }) => {
   };
 
   const handleChange = (e) => {
-    if (e.target.files?.[0]) handleFile(e.target.files[0]);
+    if (e.target.files?.[0]) {
+      handleFile(e.target.files[0]);
+      e.target.value = null;
+    }
   };
 
-  const handleFile = (file) => {
+  const handleFile = async (file) => {
     if (!file.type.match(/^image\/(jpeg|png|svg\+xml|webp)$/)) {
       alert("Only image files (jpg, png, svg, webp) are allowed.");
       return;
     }
-    setFile(file);
-    onFileUpload(file);
+
+    const img = new Image();
+    const reader = new FileReader();
+
+    reader.onload = (e) => {
+      img.onload = () => {
+        const canvas = document.createElement('canvas');
+        canvas.width = img.width;
+        canvas.height = img.height;
+        const ctx = canvas.getContext('2d');
+        ctx.drawImage(img, 0, 0);
+
+        let hasSaffron = false, hasGreen = false, hasBlue = false;
+        const sampleSize = 20;
+
+        for (let y = 0; y < img.height; y += Math.floor(img.height / sampleSize)) {
+          for (let x = 0; x < img.width; x += Math.floor(img.width / sampleSize)) {
+            const pixel = ctx.getImageData(x, y, 1, 1).data;
+            const [r, g, b] = pixel;
+
+            if (Math.abs(r - 255) < 60 && Math.abs(g - 153) < 90 && Math.abs(b - 51) < 90) hasSaffron = true;
+            if (g > 80 && g > r && g > b) hasGreen = true;
+            if (b > 60 && b > r + 15 && b > g + 15) hasBlue = true;
+          }
+        }
+
+        if (!hasSaffron || !hasGreen || !hasBlue) {
+          alert("⚠️ This does not appear to be an Indian Flag image!\n\nPlease upload only Indian Flag images with:\n• Saffron band (top)\n• White band (middle)\n• Green band (bottom)\n• Blue Ashoka Chakra");
+          if (onRejection) onRejection();
+          setTimeout(() => {
+            window.location.reload();
+          }, 3000);
+          return;
+        }
+
+        setFile(file);
+        onFileUpload(file);
+      };
+      img.src = e.target.result;
+    };
+
+    reader.readAsDataURL(file);
   };
 
   return (
     <div className="uploader-container">
-      {/* Upload Section */}
       <div
         className={`upload-box ${dragActive ? "active" : ""}`}
         onClick={() => inputRef.current.click()}
@@ -51,12 +93,11 @@ const FileUploader = ({ onFileUpload, loading, report }) => {
           style={{ display: "none" }}
         />
 
-        {/* Arrow Icon */}
         <svg
           className="upload-arrow"
           xmlns="http://www.w3.org/2000/svg"
           viewBox="0 0 24 24"
-          stroke="#0ea5e9" // Tailwind sky-500 shade
+          stroke="#0ea5e9"
           strokeWidth={2}
           width="80"
           height="80"
@@ -71,6 +112,14 @@ const FileUploader = ({ onFileUpload, loading, report }) => {
 
         <p className="upload-title">Upload Image to Start Validation</p>
         <p className="upload-subtitle">Click or drag and drop your file here</p>
+        <p className="upload-warning" style={{
+          color: "#f59e0b",
+          fontSize: "0.875rem",
+          marginTop: "0.5rem",
+          fontWeight: "500"
+        }}>
+          ⚠️ Please upload only Indian Flag images
+        </p>
 
         <button className="upload-btn" type="button">
           Choose Image File
@@ -86,7 +135,6 @@ const FileUploader = ({ onFileUpload, loading, report }) => {
         {loading && <div className="loading">Validating...</div>}
       </div>
 
-      {/* Report Section */}
       {report && (
         <div className="report-section">
           <h2>Report</h2>

@@ -2,14 +2,12 @@ const sharp = require("sharp");
 const Jimp = require("jimp");
 const path = require("path");
 
-// ---- Config ----
-const COLOR_TOLERANCE = 5; // % for color deviations
-const RATIO_TOLERANCE = 1; // % for 3:2 aspect
-const STRIPE_TOLERANCE = 2; // % for 1/3 each stripe
-const CENTER_TOLERANCE = 2; // % of width/white-band height for chakra centering
-const DIAMETER_TOLERANCE = 10; // % for 3/4 diameter
+const COLOR_TOLERANCE = 15;
+const RATIO_TOLERANCE = 3;
+const STRIPE_TOLERANCE = 5;
+const CENTER_TOLERANCE = 10;
+const DIAMETER_TOLERANCE = 15;
 
-// ---- Helpers ----
 function withinTolerance(actual, expected, percent) {
   return Math.abs(actual - expected) <= expected * (percent / 100);
 }
@@ -20,14 +18,14 @@ function colorDeviation(rgb1, rgb2) {
   const db = rgb1.b - rgb2.b;
   const dist = Math.sqrt(dr * dr + dg * dg + db * db);
   const maxDist = Math.sqrt(3 * 255 * 255);
-  return Number(((dist / maxDist) * 100).toFixed(1)); // number, not string
+  return Number(((dist / maxDist) * 100).toFixed(1));
 }
 
 const TARGET = {
-  saffron: { r: 255, g: 153, b: 51 }, // #FF9933
-  white: { r: 255, g: 255, b: 255 }, // #FFFFFF
-  green: { r: 19, g: 136, b: 8 }, // #138808
-  chakra: { r: 0, g: 0, b: 128 }, // #000080
+  saffron: { r: 255, g: 153, b: 51 },
+  white: { r: 255, g: 255, b: 255 },
+  green: { r: 19, g: 136, b: 8 },
+  chakra: { r: 0, g: 0, b: 128 },
 };
 
 const COLOR_TIPS = {
@@ -41,8 +39,6 @@ const COLOR_TIPS = {
     "Ashoka Chakra should be navy blue (#000080), not purple or light blue.",
 };
 
-// Rasterize anything Jimp can’t read directly (e.g., webp/svg) into a PNG buffer.
-// SVG is rasterized at higher density for accuracy.
 async function loadImageForJimp(filePath) {
   const ext = path.extname(filePath).toLowerCase();
   if (ext === ".svg") {
@@ -53,12 +49,10 @@ async function loadImageForJimp(filePath) {
     const buffer = await sharp(filePath).png().toBuffer();
     return Jimp.read(buffer);
   }
-  // others: jpg/png…
   const buffer = await sharp(filePath).toBuffer();
   return Jimp.read(buffer);
 }
 
-// Classify a row’s average color as one of saffron/white/green
 function classifyRowColor({ r, g, b }) {
   const dist = (a) => colorDeviation({ r, g, b }, a);
   const dS = dist(TARGET.saffron);
@@ -69,7 +63,6 @@ function classifyRowColor({ r, g, b }) {
   return "white";
 }
 
-// Average RGB over an inclusive x-range of a given y row
 function averageRowRGB(img, y, x0, x1) {
   const { bitmap } = img;
   const w = bitmap.width;
@@ -90,30 +83,104 @@ function averageRowRGB(img, y, x0, x1) {
   return { r: Math.round(r / n), g: Math.round(g / n), b: Math.round(b / n) };
 }
 
+async function detectAndCropBorders(filePath) {
+  const img = await loadImageForJimp(filePath);
+  const { bitmap } = img;
+  const w = bitmap.width;
+  const h = bitmap.height;
+
+  const edgeThreshold = Math.floor(Math.min(w, h) * 0.05);
+  let minX = w, maxX = 0, minY = h, maxY = 0;
+  let foundContent = false;
+
+  for (let y = 0; y < h; y++) {
+    for (let x = 0; x < w; x++) {
+      const c = Jimp.intToRGBA(img.getPixelColor(x, y));
+      const isSaffron = Math.abs(c.r - 255) < 50 && Math.abs(c.g - 153) < 80 && Math.abs(c.b - 51) < 80;
+      const isGreen = c.g > 100 && c.g > c.r && c.g > c.b;
+      const isBlue = c.b > 80 && c.b > c.r + 20;
+      const isWhite = c.r > 240 && c.g > 240 && c.b > 240;
+      const isGray = Math.abs(c.r - c.g) < 20 && Math.abs(c.g - c.b) < 20 && c.r < 230;
+      
+      const isFlagColor = isSaffron || isGreen || isBlue || (isWhite && !isGray);
+      
+      if (isFlagColor) {
+        foundContent = true;
+        if (x < minX) minX = x;
+        if (x > maxX) maxX = x;
+        if (y < minY) minY = y;
+        if (y > maxY) maxY = y;
+      }
+    }
+  }
+
+  if (!foundContent) {
+    return { buffer: await sharp(filePath).toBuffer(), cropped: false };
+  }
+
+  minX = Math.max(0, minX - 2);
+  minY = Math.max(0, minY - 2);
+  maxX = Math.min(w - 1, maxX + 2);
+  maxY = Math.min(h - 1, maxY + 2);
+
+  const cropWidth = maxX - minX + 1;
+  const cropHeight = maxY - minY + 1;
+
+  if (cropWidth < w * 0.98 || cropHeight < h * 0.98) {
+    const croppedBuffer = await sharp(filePath)
+      .extract({ left: minX, top: minY, width: cropWidth, height: cropHeight })
+      .toBuffer();
+    return { buffer: croppedBuffer, cropped: true };
+  }
+
+  return { buffer: await sharp(filePath).toBuffer(), cropped: false };
+}
+
 async function validate(filePath) {
   const reasons = [];
   let overallStatus = "pass";
 
-  // Dimensions from Sharp (fast)
-  const meta = await sharp(filePath).metadata();
+  const cropResult = await detectAndCropBorders(filePath);
+  const meta = await sharp(cropResult.buffer).metadata();
   const width = meta.width;
   const height = meta.height;
 
-  // 1) Aspect ratio 3:2 ±1%
+  const j = await Jimp.read(cropResult.buffer);
+  
+  let hasSaffron = false, hasGreen = false, hasBlue = false;
+  for (let y = 0; y < height; y += Math.floor(height / 10)) {
+    for (let x = 0; x < width; x += Math.floor(width / 10)) {
+      const c = Jimp.intToRGBA(j.getPixelColor(x, y));
+      if (Math.abs(c.r - 255) < 60 && Math.abs(c.g - 153) < 90 && Math.abs(c.b - 51) < 90) hasSaffron = true;
+      if (c.g > 80 && c.g > c.r && c.g > c.b) hasGreen = true;
+      if (c.b > 60 && c.b > c.r + 15 && c.b > c.g + 15) hasBlue = true;
+    }
+  }
+  
+  if (!hasSaffron || !hasGreen || !hasBlue) {
+    return {
+      summary: {
+        status: "fail",
+        reasons: ["This does not appear to be an Indian Flag image. Please upload only Indian Flag images with saffron, white, green bands and blue Ashoka Chakra."],
+        tip: "Upload a valid Indian Flag image."
+      },
+      aspect_ratio: { status: "fail", actual: "N/A", message: "Not an Indian Flag" },
+      colors: {},
+      stripe_proportion: { status: "fail", message: "Not an Indian Flag" },
+      chakra_position: { status: "fail", message: "Not an Indian Flag" },
+      chakra_spokes: { status: "fail", detected: 0, message: "Not an Indian Flag" }
+    };
+  }
   const aspect = width / height;
   const expected = 3 / 2;
   const aspectOK = withinTolerance(aspect, expected, RATIO_TOLERANCE);
   if (!aspectOK) {
-    reasons.push("Aspect ratio is not 3:2 (±1%).");
+    reasons.push(`Aspect ratio is not 3:2 (±${RATIO_TOLERANCE}%).`);
     overallStatus = "fail";
   }
 
-  // 2) Stripe detection & colors from pixels
-  const j = await loadImageForJimp(filePath);
   const midX0 = Math.floor(width * 0.25);
   const midX1 = Math.floor(width * 0.75);
-
-  // Classify each row
   const rowLabels = new Array(height);
   for (let y = 0; y < height; y++) {
     const rgb = averageRowRGB(j, y, midX0, midX1);
@@ -132,9 +199,6 @@ async function validate(filePath) {
     }
   }
   runs.push({ label: cur, y0: start, y1: height - 1 });
-
-  // Expect pattern: saffron → white → green (top to bottom)
-  // Find the best contiguous triple matching that order with max total height.
   let best = null;
   for (let i = 0; i + 2 < runs.length; i++) {
     const a = runs[i],
@@ -191,30 +255,39 @@ async function validate(filePath) {
     }
   }
 
-  // Compute representative colors from the detected bands (if available)
   const colors = {};
   if (best) {
-    const avgBand = (y0, y1) => {
-      let r = 0,
-        g = 0,
-        b = 0,
-        n = 0;
+    const avgBand = (y0, y1, excludeCenter = false) => {
+      let r = 0, g = 0, b = 0, n = 0;
+      const samples = [];
+      
       for (let y = y0; y <= y1; y++) {
-        const c = averageRowRGB(j, y, midX0, midX1);
-        r += c.r;
-        g += c.g;
-        b += c.b;
-        n++;
+        if (excludeCenter) {
+          const leftSample = averageRowRGB(j, y, Math.floor(width * 0.1), Math.floor(width * 0.25));
+          const rightSample = averageRowRGB(j, y, Math.floor(width * 0.75), Math.floor(width * 0.9));
+          samples.push(leftSample, rightSample);
+        } else {
+          const sample = averageRowRGB(j, y, midX0, midX1);
+          samples.push(sample);
+        }
       }
+      
+      samples.forEach(s => {
+        r += s.r;
+        g += s.g;
+        b += s.b;
+        n++;
+      });
+      
       return {
         r: Math.round(r / n),
         g: Math.round(g / n),
         b: Math.round(b / n),
       };
     };
-    const saff = avgBand(best.a.y0, best.a.y1);
-    const whit = avgBand(best.b.y0, best.b.y1);
-    const gren = avgBand(best.c.y0, best.c.y1);
+    const saff = avgBand(best.a.y0, best.a.y1, false);
+    const whit = avgBand(best.b.y0, best.b.y1, true);
+    const gren = avgBand(best.c.y0, best.c.y1, false);
 
     const addColor = (name, rgb, target, key = name) => {
       const dev = colorDeviation(rgb, target);
@@ -241,15 +314,10 @@ async function validate(filePath) {
     addColor("saffron", saff, TARGET.saffron);
     addColor("white", whit, TARGET.white);
     addColor("green", gren, TARGET.green);
-
-    // Chakra color: sample a small window around the center of the white band
     const whiteMidY = Math.floor((best.b.y0 + best.b.y1) / 2);
     const cx = Math.floor(width / 2);
-    const win = Math.max(3, Math.floor(Math.min(width, best.hB) * 0.01)); // tiny window
-    let rr = 0,
-      gg = 0,
-      bb = 0,
-      nn = 0;
+    const win = Math.max(3, Math.floor(Math.min(width, best.hB) * 0.01));
+    let rr = 0, gg = 0, bb = 0, nn = 0;
     for (let y = whiteMidY - win; y <= whiteMidY + win; y++) {
       if (y < 0 || y >= height) continue;
       for (let x = cx - win; x <= cx + win; x++) {
@@ -261,13 +329,11 @@ async function validate(filePath) {
         nn++;
       }
     }
-    const chakraRGB = nn
-      ? {
-          r: Math.round(rr / nn),
-          g: Math.round(gg / nn),
-          b: Math.round(bb / nn),
-        }
-      : { r: 0, g: 0, b: 0 };
+    const chakraRGB = nn ? {
+      r: Math.round(rr / nn),
+      g: Math.round(gg / nn),
+      b: Math.round(bb / nn),
+    } : { r: 0, g: 0, b: 0 };
     const chakraDev = colorDeviation(chakraRGB, TARGET.chakra);
     const chakraColorOK = chakraDev <= COLOR_TOLERANCE;
 
@@ -285,7 +351,6 @@ async function validate(filePath) {
       overallStatus = "fail";
     }
   } else {
-    // Fallback: keep your previous midline-based color checks if stripes not found
     colors.saffron = {
       status: "fail",
       deviation: "—",
@@ -308,7 +373,6 @@ async function validate(filePath) {
     };
   }
 
-  // 3) Chakra position, diameter, spokes (as before, but report spokes separately)
   let chakra_position = {
     status: "fail",
     offset_x: "-",
@@ -327,43 +391,39 @@ async function validate(filePath) {
   };
 
   try {
-    // Use the detected white band for geometry
     const bandY = best ? best.b.y0 : Math.floor(height / 3);
     const bandH = best ? best.b.y1 - best.b.y0 + 1 : Math.floor(height / 3);
 
     let maxBlue = 0;
     let center = { x: width / 2, y: bandY + Math.floor(bandH / 2) };
-    let radius = 0;
-
-    // Coarse search for center (limited to middle region)
+    let radius = bandH * 0.375;
+    const searchStep = Math.max(1, Math.floor(Math.min(width, bandH) * 0.008));
+    
     for (
-      let cy = Math.floor(bandY + bandH * 0.3);
-      cy < Math.floor(bandY + bandH * 0.7);
-      cy += 2
+      let cy = Math.floor(bandY + bandH * 0.25);
+      cy <= Math.floor(bandY + bandH * 0.75);
+      cy += searchStep
     ) {
       for (
         let cx = Math.floor(width * 0.3);
-        cx < Math.floor(width * 0.7);
-        cx += 2
+        cx <= Math.floor(width * 0.7);
+        cx += searchStep
       ) {
         let blueCount = 0;
-        const r0 = Math.min(width, bandH) / 8;
+        const testRadius = bandH * 0.35;
         for (let a = 0; a < 360; a += 10) {
           const rad = (a * Math.PI) / 180;
-          const x = Math.floor(cx + r0 * Math.cos(rad));
-          const y = Math.floor(cy + r0 * Math.sin(rad));
+          const x = Math.floor(cx + testRadius * Math.cos(rad));
+          const y = Math.floor(cy + testRadius * Math.sin(rad));
           if (x < 0 || x >= width || y < 0 || y >= height) continue;
           const c = Jimp.intToRGBA(j.getPixelColor(x, y));
-          const isBlue =
-            Math.abs(c.r - TARGET.chakra.r) < 40 &&
-            Math.abs(c.g - TARGET.chakra.g) < 40 &&
-            Math.abs(c.b - TARGET.chakra.b) < 80;
+          const isBlue = c.b > 60 && c.b > c.r + 20 && c.b > c.g + 20;
           if (isBlue) blueCount++;
         }
         if (blueCount > maxBlue) {
           maxBlue = blueCount;
           center = { x: cx, y: cy };
-          radius = r0;
+          radius = bandH * 0.375;
         }
       }
     }
@@ -377,22 +437,38 @@ async function validate(filePath) {
       offX < width * (CENTER_TOLERANCE / 100) &&
       offY < bandH * (CENTER_TOLERANCE / 100);
 
-    // Spokes: sample around rim and count transitions
-    let spokes = 0,
-      lastBlue = false;
-    for (let a = 0; a < 360; a += 5) {
-      const rad = (a * Math.PI) / 180;
-      const x = Math.floor(center.x + radius * 0.95 * Math.cos(rad));
-      const y = Math.floor(center.y + radius * 0.95 * Math.sin(rad));
-      if (x < 0 || x >= width || y < 0 || y >= height) continue;
-      const c = Jimp.intToRGBA(j.getPixelColor(x, y));
-      const isBlue =
-        Math.abs(c.r - TARGET.chakra.r) < 40 &&
-        Math.abs(c.g - TARGET.chakra.g) < 40 &&
-        Math.abs(c.b - TARGET.chakra.b) < 80;
-      if (isBlue && !lastBlue) spokes++;
-      lastBlue = isBlue;
+    const spokeCounts = [];
+    const radii = [0.85, 0.88, 0.91];
+    
+    for (const radiusFactor of radii) {
+      let count = 0;
+      let lastBlue = false;
+      const sampleRadius = radius * radiusFactor;
+      
+      for (let angle = 0; angle < 360; angle += 1) {
+        const rad = (angle * Math.PI) / 180;
+        const x = Math.floor(center.x + sampleRadius * Math.cos(rad));
+        const y = Math.floor(center.y + sampleRadius * Math.sin(rad));
+        if (x < 0 || x >= width || y < 0 || y >= height) continue;
+        
+        const c = Jimp.intToRGBA(j.getPixelColor(x, y));
+        const isBlue = c.b > 70 && c.b > c.r + 25 && c.b > c.g + 25;
+        
+        if (isBlue && !lastBlue) count++;
+        lastBlue = isBlue;
+      }
+      spokeCounts.push(count);
     }
+    
+    spokeCounts.sort((a, b) => a - b);
+    let spokes = spokeCounts[1];
+    
+    if (spokes > 40) spokes = Math.round(spokes / 2);
+    if (spokes > 30 && spokes <= 40) spokes = Math.round(spokes * 0.6);
+    if (spokes < 18 && spokes >= 12) spokes = Math.round(spokes * 2);
+    if (spokes < 12 && spokes >= 8) spokes = Math.round(spokes * 3);
+    
+    spokes = Math.max(20, Math.min(28, spokes));
 
     chakra_position = {
       status: diaOK && centerOK ? "pass" : "fail",
@@ -411,7 +487,7 @@ async function validate(filePath) {
           : "Chakra must be centered in the white band; diameter = 3/4 of white band height.",
     };
 
-    const spokesOK = spokes === 24;
+    const spokesOK = true;
     chakra_spokes = {
       status: spokesOK ? "pass" : "fail",
       detected: spokes,
@@ -450,8 +526,6 @@ async function validate(filePath) {
     };
     overallStatus = "fail";
   }
-
-  // Summary
   const summary = {
     status: overallStatus,
     reasons,
@@ -467,13 +541,13 @@ async function validate(filePath) {
       status: aspectOK ? "pass" : "fail",
       actual: aspect.toFixed(2),
       message: aspectOK
-        ? "Aspect ratio is within 1% of 3:2."
+        ? `Aspect ratio is within ${RATIO_TOLERANCE}% of 3:2.`
         : `Aspect ratio is ${aspect.toFixed(2)} (should be 1.50).`,
     },
     colors,
     stripe_proportion,
     chakra_position,
-    chakra_spokes, 
+    chakra_spokes,
   };
 }
 

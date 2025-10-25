@@ -1,3 +1,85 @@
 @tailwind base;
 @tailwind components;
 @tailwind utilities;
+
+@keyframes fadeIn {
+  from {
+    opacity: 0;
+    transform: translateY(-10px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+.animate-fade-in {
+  animation: fadeIn 0.5s ease-in-out;
+}
+
+/* Flowing flag wave animations */
+@keyframes wave1 {
+  0%, 100% {
+    d: path("M 0,100 Q 300,80 600,100 T 1200,100 L 1200,0 L 0,0 Z");
+  }
+  50% {
+    d: path("M 0,100 Q 300,120 600,100 T 1200,100 L 1200,0 L 0,0 Z");
+  }
+}
+
+@keyframes wave2 {
+  0%, 100% {
+    d: path("M 0,200 Q 300,180 600,200 T 1200,200 L 1200,100 L 0,100 Z");
+  }
+  50% {
+    d: path("M 0,200 Q 300,220 600,200 T 1200,200 L 1200,100 L 0,100 Z");
+  }
+}
+
+@keyframes wave3 {
+  0%, 100% {
+    d: path("M 0,300 Q 300,280 600,300 T 1200,300 L 1200,200 L 0,200 Z");
+  }
+  50% {
+    d: path("M 0,300 Q 300,320 600,300 T 1200,300 L 1200,200 L 0,200 Z");
+  }
+}
+
+.wave-path-1 {
+  animation: wave1 4s ease-in-out infinite;
+}
+
+.wave-path-2 {
+  animation: wave2 5s ease-in-out infinite;
+}
+
+.wave-path-3 {
+  animation: wave3 6s ease-in-out infinite;
+}
+
+.flowing-flag {
+  animation: subtle-float 8s ease-in-out infinite;
+}
+
+@keyframes subtle-float {
+  0%, 100% {
+    transform: translateY(0px);
+  }
+  50% {
+    transform: translateY(-10px);
+  }
+}
+
+/* Rotating chakra animation */
+@keyframes rotate {
+  from {
+    transform: translate(-50%, -50%) rotate(0deg);
+  }
+  to {
+    transform: translate(-50%, -50%) rotate(360deg);
+  }
+}
+
+.rotating-chakra {
+  animation: rotate 60s linear infinite;
+}
