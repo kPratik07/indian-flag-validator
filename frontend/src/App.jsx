@@ -24,10 +24,12 @@ function App() {
   };
 
   return (
-    <div className="min-h-screen flex flex-col items-center justify-center p-4" style={{
+    <div className="min-h-screen flex flex-col items-center justify-center p-2 sm:p-4" style={{
       background: '#f5f5f5',
       position: 'relative',
-      overflow: 'hidden'
+      overflow: 'hidden',
+      boxSizing: 'border-box',
+      width: '100%'
     }}>
       {/* Flowing Indian Flag Background */}
       <div style={{
@@ -35,8 +37,8 @@ function App() {
         top: '50%',
         left: '50%',
         transform: 'translate(-50%, -50%)',
-        width: '800px',
-        height: '600px',
+        width: 'min(800px, 90vw)',
+        height: 'min(600px, 70vh)',
         zIndex: 0,
         pointerEvents: 'none',
         opacity: 0.08
@@ -97,8 +99,8 @@ function App() {
           onRejection={() => setShowRejectionMessage(true)}
         />
         {showRejectionMessage && (
-          <div className="mt-6 text-center animate-fade-in">
-            <p className="text-lg font-semibold text-gray-700 bg-white/90 px-6 py-3 rounded-lg shadow-lg">
+          <div className="mt-6 text-center animate-fade-in px-4">
+            <p className="text-base md:text-lg font-semibold text-gray-700 bg-white/90 px-4 md:px-6 py-3 rounded-lg shadow-lg max-w-md mx-auto">
               📤 Please upload an Indian Flag image to generate the report
             </p>
           </div>

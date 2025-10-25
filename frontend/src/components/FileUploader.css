@@ -6,7 +6,8 @@ body {
   flex-direction: column;
   align-items: center;
   justify-content: flex-start;
-  padding: 40px;
+  padding: 20px;
+  box-sizing: border-box;
 
   /* Soft tricolor gradient background */
   background: linear-gradient(
@@ -18,16 +19,32 @@ body {
     #f9fafc;
 }
 
+@media (min-width: 768px) {
+  body {
+    padding: 40px;
+  }
+}
+
+/* Uploader Container */
+.uploader-container {
+  width: 100%;
+  max-width: 450px;
+  margin: 0 auto;
+  padding: 0 10px;
+  box-sizing: border-box;
+}
+
 /* Upload Box */
 .upload-box {
   border: 2px dashed #b0b0b0;
   border-radius: 12px;
-  padding: 30px;
-  max-width: 90%;
-  width: 400px;
+  padding: 30px 20px;
+  max-width: 100%;
+  width: 100%;
   text-align: center;
-  margin: 20px auto;
+  margin: 20px 0;
   position: relative;
+  box-sizing: border-box;
 
   /* Visible shadow */
   box-shadow: 0 8px 25px rgba(0, 0, 0, 0.15);
@@ -41,6 +58,13 @@ body {
     ),
     white;
   transition: 0.3s;
+}
+
+@media (min-width: 481px) {
+  .upload-box {
+    max-width: 450px;
+    margin: 20px auto;
+  }
 }
 
 .upload-box:hover {
@@ -110,10 +134,15 @@ body {
 }
 
 /* Responsive Design */
-@media (max-width: 480px) {
-  .upload-box {
+@media (max-width: 768px) {
+  body {
     padding: 20px;
+  }
+
+  .upload-box {
+    padding: 25px 15px;
     width: 95%;
+    max-width: 100%;
   }
 
   .upload-arrow {
@@ -121,8 +150,76 @@ body {
     height: 70px;
   }
 
+  .upload-title {
+    font-size: 1.1rem;
+  }
+
+  .upload-subtitle {
+    font-size: 0.9rem;
+  }
+
+  .upload-btn {
+    padding: 12px 20px;
+    font-size: 0.95rem;
+  }
+
   .report-section {
     width: 95%;
     padding: 15px;
+    max-width: 100%;
+  }
+}
+
+@media (max-width: 480px) {
+  body {
+    padding: 10px;
+  }
+
+  .uploader-container {
+    padding: 0 5px;
+  }
+
+  .upload-box {
+    padding: 20px 15px;
+    width: 100%;
+    margin: 10px 0;
+    border-radius: 10px;
+  }
+
+  .upload-arrow {
+    width: 60px;
+    height: 60px;
+  }
+
+  .upload-title {
+    font-size: 1rem;
+    line-height: 1.3;
+  }
+
+  .upload-subtitle {
+    font-size: 0.85rem;
+    line-height: 1.4;
+  }
+
+  .upload-btn {
+    padding: 10px 16px;
+    font-size: 0.9rem;
+    width: 100%;
+    max-width: 200px;
+  }
+
+  .file-info {
+    font-size: 12px;
+    word-break: break-word;
+  }
+
+  .report-section {
+    width: 100%;
+    padding: 12px;
+    margin: 10px 0;
+  }
+
+  .report-content {
+    font-size: 13px;
   }
 }
