@@ -44,16 +44,17 @@ const FileUploader = ({ onFileUpload, loading, report, onRejection }) => {
         ctx.drawImage(img, 0, 0);
 
         let hasSaffron = false, hasGreen = false, hasBlue = false;
-        const sampleSize = 20;
+        const sampleSize = 15;
 
         for (let y = 0; y < img.height; y += Math.floor(img.height / sampleSize)) {
           for (let x = 0; x < img.width; x += Math.floor(img.width / sampleSize)) {
             const pixel = ctx.getImageData(x, y, 1, 1).data;
             const [r, g, b] = pixel;
 
-            if (Math.abs(r - 255) < 60 && Math.abs(g - 153) < 90 && Math.abs(b - 51) < 90) hasSaffron = true;
-            if (g > 80 && g > r && g > b) hasGreen = true;
-            if (b > 60 && b > r + 15 && b > g + 15) hasBlue = true;
+            // More lenient color detection
+            if (r > 200 && g > 100 && g < 200 && b < 100) hasSaffron = true;
+            if (g > 100 && g > r && g > b) hasGreen = true;
+            if (b > 50 && b > r + 10 && b > g + 10) hasBlue = true;
           }
         }
 

@@ -152,9 +152,10 @@ async function validate(filePath) {
   for (let y = 0; y < height; y += Math.floor(height / 10)) {
     for (let x = 0; x < width; x += Math.floor(width / 10)) {
       const c = Jimp.intToRGBA(j.getPixelColor(x, y));
-      if (Math.abs(c.r - 255) < 60 && Math.abs(c.g - 153) < 90 && Math.abs(c.b - 51) < 90) hasSaffron = true;
-      if (c.g > 80 && c.g > c.r && c.g > c.b) hasGreen = true;
-      if (c.b > 60 && c.b > c.r + 15 && c.b > c.g + 15) hasBlue = true;
+      // More lenient color detection for production
+      if (c.r > 200 && c.g > 100 && c.g < 200 && c.b < 100) hasSaffron = true;
+      if (c.g > 100 && c.g > c.r && c.g > c.b) hasGreen = true;
+      if (c.b > 50 && c.b > c.r + 10 && c.b > c.g + 10) hasBlue = true;
     }
   }
   
