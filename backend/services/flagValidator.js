@@ -137,10 +137,11 @@ async function detectAndCropBorders(filePath) {
 }
 
 async function validate(filePath) {
-  const reasons = [];
-  let overallStatus = "pass";
+  try {
+    const reasons = [];
+    let overallStatus = "pass";
 
-  const cropResult = await detectAndCropBorders(filePath);
+    const cropResult = await detectAndCropBorders(filePath);
   const meta = await sharp(cropResult.buffer).metadata();
   const width = meta.width;
   const height = meta.height;
@@ -549,6 +550,21 @@ async function validate(filePath) {
     chakra_position,
     chakra_spokes,
   };
+  } catch (error) {
+    console.error("Validation error:", error);
+    return {
+      summary: {
+        status: "fail",
+        reasons: ["Failed to process image. Please ensure it's a valid image file."],
+        tip: "Try uploading a different image format (JPG, PNG, WebP)."
+      },
+      aspect_ratio: { status: "fail", actual: "N/A", message: "Processing failed" },
+      colors: {},
+      stripe_proportion: { status: "fail", message: "Processing failed" },
+      chakra_position: { status: "fail", message: "Processing failed" },
+      chakra_spokes: { status: "fail", detected: 0, message: "Processing failed" }
+    };
+  }
 }
 
 module.exports = { validate };
